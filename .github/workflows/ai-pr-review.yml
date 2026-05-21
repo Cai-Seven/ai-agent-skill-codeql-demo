@@ -2,7 +2,7 @@ name: AI PR Review
 
 on:
   pull_request_review:
-    types: [submitted]
+    types: [opened]
 
 jobs:
   ai-review:
