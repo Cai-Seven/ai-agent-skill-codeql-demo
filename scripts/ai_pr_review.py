@@ -131,7 +131,7 @@ PATCH:
 
 def call_ai(review_input: str) -> Dict[str, Any]:
     client = OpenAI(
-        api_key=os.environ["DEEPSEEK_API_KEY"],
+        api_key="sk-b590daddbc4a417bac7974abe2d8da54",
         base_url="https://api.deepseek.com"
     )
 
