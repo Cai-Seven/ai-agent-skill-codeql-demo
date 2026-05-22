@@ -6,7 +6,7 @@ import requests
 from openai import OpenAI
 
 GITHUB_API = "https://api.github.com"
-MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1")
+MODEL = os.getenv("AI_MODEL", "deepseek-chat")
 
 SYSTEM_PROMPT = """
 You are a security reviewer for pull requests that may contain AI Agent, Skill, SKILL.md, prompt, hook, dependency, and MCP-related changes.
@@ -116,7 +116,6 @@ def build_review_input(files: List[Dict[str, Any]]) -> str:
         filename = f.get("filename", "")
         status = f.get("status", "")
         patch = f.get("patch", "")
-
         if not patch:
             continue
 
@@ -130,8 +129,11 @@ PATCH:
     return "\n\n".join(blocks)
 
 
-def call_openai(review_input: str) -> Dict[str, Any]:
-    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+def call_ai(review_input: str) -> Dict[str, Any]:
+    client = OpenAI(
+        api_key=os.environ["DEEPSEEK_API_KEY"],
+        base_url="https://api.deepseek.com"
+    )
 
     response = client.chat.completions.create(
         model=MODEL,
@@ -197,8 +199,17 @@ def main():
         post_comment(repo, pr_number, github_token, "## AI PR Security Review\n\nNo text diff available for analysis.")
         return
 
-    report = call_openai(review_input)
-    markdown = to_markdown(report)
+    try:
+        report = call_ai(review_input)
+        markdown = to_markdown(report)
+    except Exception as e:
+        markdown = (
+            "## AI PR Security Review\n\n"
+            f"AI scan failed: `{type(e).__name__}`\n\n"
+            f"Details: `{str(e)}`\n\n"
+            "> Human review is required before merge."
+        )
+
     post_comment(repo, pr_number, github_token, markdown)
     print(markdown)
 
